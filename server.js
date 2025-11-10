@@ -1,36 +1,48 @@
-const mysql = require('mysql2');
+const express = require('express');
+const path = require('path');
+const session = require('express-session');
+const db = require('./database/db');
+const fs = require('fs');
 
-// Railway MySQL PUBLIC URL 사용
-const DATABASE_URL = process.env.MYSQL_PUBLIC_URL || process.env.DATABASE_URL;
+const app = express();
 
-let db;
-
-if (DATABASE_URL) {
-    // Railway 배포 환경 - PUBLIC URL 사용
-    console.log('🔍 Railway 환경: PUBLIC URL로 연결');
-    db = mysql.createConnection(DATABASE_URL);
-} else {
-    // 로컬 개발 환경
-    console.log('🔍 로컬 환경: localhost로 연결');
-    db = mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: '',
-        database: 'semyeong_pass'
-    });
+// uploads 폴더 자동 생성
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('✅ uploads 폴더가 생성되었습니다.');
 }
 
-db.connect((err) => {
-    if (err) {
-        console.error('❌ MySQL 연결 실패:', err.message);
-        console.error('상세 오류:', err);
-        return;
+// 미들웨어 설정
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// 세션 설정
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'semyeong-pass-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24
     }
-    console.log('✅ MySQL 데이터베이스 연결 성공!');
+}));
+
+// 라우트
+app.use('/', require('./routes/index'));
+app.use('/auth', require('./routes/auth'));
+app.use('/board', require('./routes/board'));
+app.use('/user', require('./routes/user'));
+
+// 헬스체크
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
 });
 
-db.on('error', (err) => {
-    console.error('❌ MySQL 오류:', err);
+// 서버 시작
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log('Server started on port ' + PORT);
 });
-
-module.exports = db;
