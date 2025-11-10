@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/logoo.png">
+    <title>세명패스 - 고등학생 진로 활동 플랫폼</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+        .sidebar-section {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+        .sidebar-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .top-post-item, .comment-item-home {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+        .top-post-item:last-child, .comment-item-home:last-child {
+            border-bottom: none;
+        }
+        .top-post-item:hover {
+            color: var(--primary);
+        }
+        .rank-badge {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        .calendar {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .calendar-nav {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            color: var(--text-primary);
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+        .calendar-day.header {
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: default;
+        }
+        .calendar-day:not(.header):hover {
+            background: var(--background);
+        }
+        .calendar-day.today {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+        .calendar-day.has-post {
+            background: #dbeafe;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo"><img src="/logoo.png" alt="logo"></a>
+            <ul class="nav-menu">
+                <li><a href="/board?tag=공모전">공모전</a></li>
+                <li><a href="/board?tag=진로">진로</a></li>
+                <li><a href="/board">보고서</a></li>
+                <li><a href="/board/write">글쓰기</a></li>
+            </ul>
+            <% if (user) { %>
+                <div class="user-menu">
+                    <span><%= user.nickname %>님</span>
+                    <a href="/user/mypage">마이페이지</a>
+                    <a href="/auth/logout" class="logout-btn">로그아웃</a>
+                </div>
+            <% } else { %>
+                <a href="/auth/login" class="login-btn">로그인</a>
+            <% } %>
+        </nav>
+    </header>
+
+    <!-- 배너 -->
+    <section class="banner">
+        <div class="banner-content">
+            <h1>세명패스</h1>
+            <p>고등학생들의 공모전, 진로 활동을 공유하는 플랫폼</p>
+            <a href="/board" class="cta-btn">게시판 보러가기</a>
+        </div>
+    </section>
+
+    <!-- 통계 -->
+    <section class="recent-posts">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number"><%= stats.totalPosts %></div>
+                <div class="stat-label">전체 게시글</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= stats.totalComments %></div>
+                <div class="stat-label">전체 댓글</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= stats.totalUsers %></div>
+                <div class="stat-label">가입 회원</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><%= stats.todayPosts %></div>
+                <div class="stat-label">오늘 작성된 글</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 메인 컨텐츠 -->
+    <section class="recent-posts">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+            <!-- 왼쪽: 최근 게시글 -->
+            <div>
+                <h2 class="section-title">최근 게시글</h2>
+                <div class="posts-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <% if (posts && posts.length > 0) { %>
+                        <% posts.forEach(function(post) { %>
+                            <div class="post-card" onclick="location.href='/board/view/<%= post.id %>'">
+                                <h3 class="post-title"><%= post.title %></h3>
+                                <div class="post-meta">
+                                    <span><%= post.nickname %></span>
+                                    <span>조회 <%= post.views || 0 %></span>
+                                    <span><%= new Date(post.created_at).toLocaleDateString('ko-KR') %></span>
+                                </div>
+                                <% if (post.tags) { %>
+                                    <div class="post-tags">
+                                        <% post.tags.split(',').forEach(function(tag) { %>
+                                            <span class="tag"><%= tag %></span>
+                                        <% }); %>
+                                    </div>
+                                <% } %>
+                                <% if (post.filename) { %>
+                                    <div class="post-file">파일: <%= post.filename %></div>
+                                <% } %>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p>아직 게시글이 없습니다.</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 사이드바 -->
+            <div>
+                <!-- 인기 게시글 TOP 5 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">인기 게시글 TOP 5</h3>
+                    <% if (topPosts && topPosts.length > 0) { %>
+                        <% topPosts.forEach(function(post, index) { %>
+                            <div class="top-post-item" onclick="location.href='/board/view/<%= post.id %>'">
+                                <span class="rank-badge"><%= index + 1 %></span>
+                                <strong style="font-size: 0.9375rem;"><%= post.title %></strong>
+                                <div style="font-size: 0.8125rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                    <%= post.nickname %> | 조회 <%= post.views %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p style="text-align: center; color: var(--text-secondary);">게시글이 없습니다</p>
+                    <% } %>
+                </div>
+
+                <!-- 최근 댓글 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">최근 댓글</h3>
+                    <% if (recentComments && recentComments.length > 0) { %>
+                        <% recentComments.forEach(function(comment) { %>
+                            <div class="comment-item-home" onclick="location.href='/board/view/<%= comment.post_id %>'">
+                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <%= comment.nickname %> | <%= comment.post_title.substring(0, 20) %>...
+                                </div>
+                                <div style="font-size: 0.9375rem;">
+                                    <%= comment.content.substring(0, 50) %>...
+                                </div>
+                            </div>
+                        <% }); %>
+                    <% } else { %>
+                        <p style="text-align: center; color: var(--text-secondary);">댓글이 없습니다</p>
+                    <% } %>
+                </div>
+
+                <!-- 캘린더 -->
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" onclick="changeMonth(-1)">&#8249;</button>
+                        <h3 id="calendar-title" style="font-size: 1.125rem; font-weight: 600;"></h3>
+                        <button class="calendar-nav" onclick="changeMonth(1)">&#8250;</button>
+                    </div>
+                    <div class="calendar-grid" id="calendar-grid"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 캘린더 스크립트 -->
+    <script>
+        let currentDate = new Date();
+        
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            
+            document.getElementById('calendar-title').textContent = 
+                year + '년 ' + (month + 1) + '월';
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            
+            let html = '';
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            
+            days.forEach(function(day) {
+                html += '<div class="calendar-day header">' + day + '</div>';
+            });
+            
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="calendar-day"></div>';
+            }
+            
+            for (let date = 1; date <= lastDate; date++) {
+                const isToday = today.getFullYear() === year && 
+                               today.getMonth() === month && 
+                               today.getDate() === date;
+                const className = isToday ? 'calendar-day today' : 'calendar-day';
+                html += '<div class="' + className + '">' + date + '</div>';
+            }
+            
+            document.getElementById('calendar-grid').innerHTML = html;
+        }
+        
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+        
+        renderCalendar();
+    </script>
+</body>
+</html>

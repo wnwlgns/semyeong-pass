@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/logoo.png">
+    <title>글 수정 - 세명패스</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo"><img src="/logoo.png" alt="logo">세명패스</a>
+            <ul class="nav-menu">
+                <li><a href="/board?tag=공모전">공모전</a></li>
+                <li><a href="/board?tag=진로">진로</a></li>
+                <li><a href="/board">보고서</a></li>
+                <li><a href="/board/write">글쓰기</a></li>
+            </ul>
+            <div class="user-menu">
+                <span><%= user.nickname %>님</span>
+                <a href="/user/mypage">마이페이지</a>
+                <a href="/auth/logout" class="logout-btn">로그아웃</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 글수정 폼 -->
+    <div class="write-form">
+        <h2 class="section-title">글 수정</h2>
+        
+        <form action="/board/edit/<%= post.id %>" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">제목 *</label>
+                <input type="text" id="title" name="title" required value="<%= post.title %>">
+            </div>
+
+            <div class="form-group">
+                <label for="content">내용 *</label>
+                <textarea id="content" name="content" required><%= post.content %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>태그 선택</label>
+                <div class="tag-checkboxes">
+                    <% tags.forEach(function(tag) { %>
+                        <label class="tag-checkbox">
+                            <input type="checkbox" name="tags" value="<%= tag.name %>" 
+                                <%= selectedTags.includes(tag.name) ? 'checked' : '' %>>
+                            <span>#<%= tag.name %></span>
+                        </label>
+                    <% }); %>
+                </div>
+            </div>
+
+            <% if (post.image_filename) { %>
+                <div class="form-group">
+                    <label>현재 이미지</label>
+                    <img src="/uploads/<%= post.image_filename %>" style="max-width: 100%; max-height: 300px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: block; margin: 0.5rem 0;">
+                    <label class="tag-checkbox">
+                        <input type="checkbox" name="delete_image">
+                        <span>이미지 삭제</span>
+                    </label>
+                </div>
+            <% } %>
+
+            <div class="form-group">
+                <label for="image">새 이미지 업로드</label>
+                <input type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
+                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                    ※ 새 이미지를 선택하면 기존 이미지가 교체됩니다.
+                </small>
+                <div id="image-preview" style="margin-top: 1rem; display: none;">
+                    <img id="preview-img" style="max-width: 100%; max-height: 300px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                </div>
+            </div>
+
+            <% if (post.filename) { %>
+                <div class="form-group">
+                    <label>현재 첨부파일</label>
+                    <p style="color: #666;">📎 <%= post.original_filename || post.filename %></p>
+                    <label class="tag-checkbox">
+                        <input type="checkbox" name="delete_file">
+                        <span>파일 삭제</span>
+                    </label>
+                </div>
+            <% } %>
+
+            <div class="form-group">
+                <label for="file">새 첨부파일 업로드</label>
+                <input type="file" id="file" name="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.hwp,.zip">
+                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                    ※ 새 파일을 선택하면 기존 파일이 교체됩니다.
+                </small>
+            </div>
+
+            <button type="submit" class="submit-btn">수정 완료</button>
+            <a href="/board/view/<%= post.id %>" class="back-btn" style="display: inline-block; text-align: center; margin-top: 1rem;">취소</a>
+        </form>
+    </div>
+
+    <!-- 이미지 미리보기 스크립트 -->
+    <script>
+        function previewImage(event) {
+            var reader = new FileReader();
+            reader.onload = function() {
+                var preview = document.getElementById('image-preview');
+                var img = document.getElementById('preview-img');
+                img.src = reader.result;
+                preview.style.display = 'block';
+            };
+            if (event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+    </script>
+</body>
+</html>

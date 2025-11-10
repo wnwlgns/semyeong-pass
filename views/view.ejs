@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/logoo.png">
+    <title><%= post.title %> - 세명패스</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .like-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .like-button.liked {
+            background: #e91e63;
+            color: white;
+        }
+        .like-button.not-liked {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .comment-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        .comment-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .comment-author {
+            font-weight: bold;
+        }
+        .comment-date {
+            color: #999;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+        }
+        .comment-content {
+            color: #333;
+            line-height: 1.6;
+        }
+        .file-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+        .file-title {
+            margin-bottom: 1rem;
+        }
+        .comment-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+        }
+        .comment-title {
+            margin-bottom: 1.5rem;
+        }
+        .no-comments {
+            text-align: center;
+            color: #999;
+            padding: 2rem;
+        }
+        .login-message {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .login-link {
+            color: #4A90E2;
+        }
+        .submit-button {
+            width: auto;
+            padding: 0.75rem 2rem;
+        }
+        .comment-delete-btn {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        .button-group {
+            margin-top: 2rem;
+        }
+        .section-gap {
+            margin-top: 2rem;
+        }
+        .image-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .post-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .share-button {
+            padding: 0.75rem 1.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-left: 0.5rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo"><img src="/logoo.png" alt="logo"></a>
+            <ul class="nav-menu">
+                <li><a href="/board?tag=공모전">공모전</a></li>
+                <li><a href="/board?tag=진로">진로</a></li>
+                <li><a href="/board">보고서</a></li>
+                <li><a href="/board/write">글쓰기</a></li>
+            </ul>
+            <% if (user) { %>
+                <div class="user-menu">
+                    <span><%= user.nickname %>님</span>
+                    <a href="/user/mypage">마이페이지</a>
+                    <a href="/auth/logout" class="logout-btn">로그아웃</a>
+                </div>
+            <% } else { %>
+                <a href="/auth/login" class="login-btn">로그인</a>
+            <% } %>
+        </nav>
+    </header>
+
+    <!-- 게시글 상세 -->
+    <div class="post-detail">
+        <div class="post-header">
+            <h1><%= post.title %></h1>
+            <div class="post-info">
+                <span> <%= post.nickname %></span>
+                <span> <%= new Date(post.created_at).toLocaleDateString('ko-KR') %></span>
+                <span> 조회수 <%= post.views %></span>
+                <span id="like-info"> 좋아요 <span id="like-count"><%= likeCount %></span></span>
+            </div>
+            <% if (post.tags) { %>
+                <div class="post-tags">
+                    <% post.tags.split(',').forEach(function(tag) { %>
+                        <span class="tag">#<%= tag %></span>
+                    <% }); %>
+                </div>
+            <% } %>
+            
+            <!-- 좋아요 버튼 -->
+            <div style="margin-top: 1rem;">
+                <% if (user) { %>
+                    <% var buttonClass = userLiked ? 'like-button liked' : 'like-button not-liked'; %>
+                    <% var iconText = userLiked ? '❤️' : '🤍'; %>
+                    <% var labelText = userLiked ? '좋아요 취소' : '좋아요'; %>
+                    <button id="like-btn" class="<%= buttonClass %>" onclick="toggleLike(<%= post.id %>)">
+                        <span id="like-icon"><%= iconText %></span>
+                        <span id="like-text"><%= labelText %></span>
+                    </button>
+                    <button onclick="sharePost()" class="share-button">
+                         공유하기
+                    </button>
+                <% } else { %>
+                    <button class="like-button not-liked" onclick="alert('로그인이 필요합니다.'); location.href='/auth/login';">
+                         좋아요
+                    </button>
+                    <button onclick="sharePost()" class="share-button">
+                         공유하기
+                    </button>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="post-content">
+            <%= post.content %>
+        </div>
+
+        <!-- 이미지 표시 -->
+        <% if (post.image_filename) { %>
+            <div class="image-section">
+                <img src="/uploads/<%= post.image_filename %>" 
+                     alt="게시글 이미지" 
+                     class="post-image">
+            </div>
+        <% } %>
+
+        <% if (post.filename) { %>
+            <div class="file-section">
+                <h3 class="file-title">📎 첨부파일</h3>
+                <a href="/uploads/<%= post.filename %>" 
+                   download="<%= post.original_filename || post.filename %>" 
+                   class="download-btn">
+                    <%= post.original_filename || post.filename %> 다운로드
+                </a>
+            </div>
+        <% } %>
+
+        <div class="button-group">
+            <a href="/board" class="back-btn">목록으로</a>
+            <% if (user && user.id === post.author_id) { %>
+                <a href="/board/edit/<%= post.id %>" class="download-btn">수정</a>
+                <form action="/board/delete/<%= post.id %>" method="POST" style="display: inline;" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+                    <button type="submit" class="delete-btn">삭제</button>
+                </form>
+            <% } %>
+        </div>
+
+    <!-- 댓글 섹션 -->
+    <div class="post-detail section-gap">
+        <div class="comment-section">
+            <h3 class="comment-title"> 댓글 (<%= comments.length %>)</h3>
+            
+            <!-- 댓글 작성 폼 -->
+            <% if (user) { %>
+                <form action="/board/comment/<%= post.id %>" method="POST" style="margin-bottom: 2rem;">
+                    <div class="form-group">
+                        <textarea name="content" required placeholder="댓글을 입력하세요..." class="comment-textarea"></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn submit-button">댓글 작성</button>
+                </form>
+            <% } else { %>
+                <p class="login-message">
+                    댓글을 작성하려면 <a href="/auth/login" class="login-link">로그인</a>해주세요.
+                </p>
+            <% } %>
+            
+            <!-- 댓글 목록 -->
+            <div style="margin-top: 2rem;">
+                <% if (comments.length > 0) { %>
+                    <% comments.forEach(function(comment) { %>
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <div>
+                                    <span class="comment-author"><%= comment.nickname %></span>
+                                    <span class="comment-date">
+                                        <%= new Date(comment.created_at).toLocaleString('ko-KR') %>
+                                    </span>
+                                </div>
+                                <% if (user && user.id === comment.author_id) { %>
+                                    <button onclick="if(confirm('댓글을 삭제하시겠습니까?')) location.href='/board/comment/delete/<%= comment.id %>'" 
+                                            class="delete-btn comment-delete-btn">
+                                        삭제
+                                    </button>
+                                <% } %>
+                            </div>
+                            <p class="comment-content"><%= comment.content %></p>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p class="no-comments">
+                        아직 댓글이 없습니다. 첫 댓글을 작성해보세요!
+                    </p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 좋아요 토글
+        function toggleLike(postId) {
+            fetch('/board/like/' + postId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    document.getElementById('like-count').textContent = data.likeCount;
+                    
+                    var btn = document.getElementById('like-btn');
+                    var icon = document.getElementById('like-icon');
+                    var text = document.getElementById('like-text');
+                    
+                    if (data.liked) {
+                        btn.className = 'like-button liked';
+                        icon.textContent = '❤️';
+                        text.textContent = '좋아요 취소';
+                    } else {
+                        btn.className = 'like-button not-liked';
+                        icon.textContent = '🤍';
+                        text.textContent = '좋아요';
+                    }
+                } else {
+                    alert(data.message || '오류가 발생했습니다.');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('좋아요 처리 중 오류가 발생했습니다.');
+            });
+        }
+
+        // 공유하기
+        function sharePost() {
+            var url = window.location.href;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function() {
+                    alert('링크가 복사되었습니다!\n\n' + url);
+                }).catch(function(err) {
+                    prompt('이 링크를 복사하세요:', url);
+                });
+            } else {
+                prompt('이 링크를 복사하세요:', url);
+            }
+        }
+    </script>
+</body>
+</html>

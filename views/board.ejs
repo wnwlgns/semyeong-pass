@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/logoo.png">
+    <title>게시판 - 세명패스</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 네비게이션 바 -->
+    <header class="header">
+        <nav class="nav">
+            <a href="/" class="logo"><img src="/logoo.png" alt="logo"></a>
+            <ul class="nav-menu">
+                <li><a href="/board?tag=공모전">공모전</a></li>
+                <li><a href="/board?tag=진로">진로</a></li>
+                <li><a href="/board">보고서</a></li>
+                <li><a href="/board/write">글쓰기</a></li>
+            </ul>
+            <% if (user) { %>
+                <div class="user-menu">
+                    <span><%= user.nickname %>님</span>
+                    <a href="/user/mypage">마이페이지</a>
+                    <a href="/auth/logout" class="logout-btn">로그아웃</a>
+                </div>
+            <% } else { %>
+                <a href="/auth/login" class="login-btn">로그인</a>
+            <% } %>
+        </nav>
+    </header>
+
+    <!-- 게시판 -->
+    <section class="board-section">
+        <h2 class="section-title">게시판</h2>
+        
+        <!-- 태그 필터 -->
+        <div class="tag-filters">
+            <button class="tag-filter <%= currentTag === 'all' ? 'active' : '' %>" 
+                    onclick="location.href='/board?tag=all'">
+                전체
+            </button>
+            <% if (tags && tags.length > 0) { %>
+                <% tags.forEach(function(tag) { %>
+                    <button class="tag-filter <%= currentTag === tag.name ? 'active' : '' %>" 
+                            onclick="location.href='/board?tag=<%= tag.name %>'">
+                        #<%= tag.name %>
+                    </button>
+                <% }); %>
+            <% } %>
+        </div>
+
+        <!-- 검색창 -->
+        <!-- 검색창 -->
+        <div style="margin-bottom: 1rem;">
+            <!-- 기존 검색 폼 -->
+        </div>
+
+        <!-- 정렬 버튼 추가 -->
+        <div style="margin-bottom: 2rem; display: flex; gap: 0.75rem; align-items: center;">
+            <span style="font-weight: 500; color: var(--text-secondary);">정렬:</span>
+            <button class="tag-filter <%= sort === 'latest' ? 'active' : '' %>" 
+                    onclick="location.href='/board?tag=<%= currentTag %>&search=<%= search %>&sort=latest'">
+                최신순
+            </button>
+            <button class="tag-filter <%= sort === 'views' ? 'active' : '' %>" 
+                    onclick="location.href='/board?tag=<%= currentTag %>&search=<%= search %>&sort=views'">
+                조회순
+            </button>
+            <button class="tag-filter <%= sort === 'likes' ? 'active' : '' %>" 
+                    onclick="location.href='/board?tag=<%= currentTag %>&search=<%= search %>&sort=likes'">
+                좋아요순
+            </button>
+            <button class="tag-filter <%= sort === 'comments' ? 'active' : '' %>" 
+                    onclick="location.href='/board?tag=<%= currentTag %>&search=<%= search %>&sort=comments'">
+                댓글순
+            </button>
+        </div>
+
+        <!-- 검색 결과 메시지 -->
+        <% if (search) { %>
+            <div style="background: #e3f2fd; padding: 1rem; border-radius: 5px; margin-bottom: 2rem; text-align: center;">
+                <p style="margin: 0; color: #1976d2;">
+                    "<strong><%= search %></strong>" 검색 결과: <strong><%= posts.length %></strong>개의 게시글
+                </p>
+            </div>
+        <% } %>
+
+        <!-- 게시글 목록 -->
+        <div class="posts-grid">
+            <% if (posts && posts.length > 0) { %>
+                <% posts.forEach(function(post) { %>
+                    <div class="post-card" onclick="location.href='/board/view/<%= post.id %>'">
+                        <h3 class="post-title"><%= post.title %></h3>
+                        <% if (post.summary) { %>
+                            <p style="color: #666; font-size: 0.9rem; margin: 0.5rem 0;">
+                                <%= post.summary.substring(0, 100) %>...
+                            </p>
+                        <% } %>
+                        <div class="post-meta">
+                            <span> <%= post.nickname %></span>
+                            <span> <%= post.views || 0 %></span>
+                            <span> <%= new Date(post.created_at).toLocaleDateString('ko-KR') %></span>
+                        </div>
+                        <% if (post.tags) { %>
+                            <div class="post-tags">
+                                <% post.tags.split(',').forEach(function(tag) { %>
+                                    <span class="tag">#<%= tag %></span>
+                                <% }); %>
+                            </div>
+                        <% } %>
+                        <% if (post.filename) { %>
+                            <div class="post-file">📎 <%= post.original_filename || post.filename %></div>
+                        <% } %>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div style="text-align: center; padding: 3rem; color: #666; grid-column: 1 / -1;">
+                    <p style="font-size: 1.2rem; margin-bottom: 1rem;">
+                        <% if (search) { %>
+                            검색 결과가 없습니다.
+                        <% } else { %>
+                            아직 게시글이 없습니다.
+                        <% } %>
+                    </p>
+                    <% if (user && !search) { %>
+                        <a href="/board/write" class="cta-btn" style="margin-top: 1rem;">첫 게시글 작성하기</a>
+                    <% } %>
+                </div>
+            <% } %>
+        </div>
+    </section>
+</body>
+</html>
