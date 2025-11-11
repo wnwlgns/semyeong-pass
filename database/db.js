@@ -1,40 +1,35 @@
 const mysql = require('mysql2');
 
-// Railway MySQL 환경변수 확인
-const dbConfig = {
-    host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-    port: process.env.MYSQLPORT || 3306,
-    user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-    password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || '',
-    database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'semyeong_pass',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-};
+// Railway MYSQL_PUBLIC_URL 사용
+const DATABASE_URL = process.env.MYSQL_PUBLIC_URL || process.env.DATABASE_URL;
 
-console.log('🔍 DB 연결 시도 중...');
-console.log('Host:', dbConfig.host);
-console.log('Port:', dbConfig.port);
-console.log('User:', dbConfig.user);
-console.log('Database:', dbConfig.database);
+let db;
 
-const db = mysql.createConnection(dbConfig);
+if (DATABASE_URL) {
+    // Railway 배포 환경
+    console.log('🔍 Railway MySQL PUBLIC URL 사용');
+    db = mysql.createConnection(DATABASE_URL);
+} else {
+    // 로컬 개발 환경
+    console.log('🔍 로컬 MySQL 사용');
+    db = mysql.createConnection({
+        host: 'localhost',
+        user: 'root',
+        password: '',
+        database: 'semyeong_pass'
+    });
+}
 
 db.connect((err) => {
     if (err) {
         console.error('❌ MySQL 연결 실패:', err.message);
-        console.error('상세 오류:', err);
         return;
     }
     console.log('✅ MySQL 데이터베이스 연결 성공!');
 });
 
-// 연결 끊김 처리
 db.on('error', (err) => {
     console.error('❌ MySQL 오류:', err);
-    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-        console.log('🔄 데이터베이스 재연결 시도...');
-    }
 });
 
 module.exports = db;
